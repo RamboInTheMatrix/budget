@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Töpfe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F2EEE5;
+    --card:#FCFBF7;
+    --ink:#1A1916;
+    --muted:#807C72;
+    --hair:#E4DECF;
+    --brand:#14533C;
+    --brand-soft:#E7EFE9;
+    --pos:#2E7D52;
+    --warn:#C2452D;
+    --warn-soft:#F6E3DE;
+    --shadow:0 1px 2px rgba(26,25,22,.04), 0 8px 28px rgba(26,25,22,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+  body{padding:0;line-height:1.45}
+  .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  .serif{font-family:'Fraunces',serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px 80px}
+
+  /* ---------- Header ---------- */
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:26px 22px;max-width:1120px;margin:0 auto;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .dot{width:34px;height:34px;border-radius:9px;background:var(--brand);position:relative;flex:0 0 auto}
+  .brand .dot::after{content:"";position:absolute;inset:9px 8px 7px;border:2px solid #F2EEE5;border-top:none;border-radius:0 0 7px 7px}
+  .brand h1{font-family:'Fraunces',serif;font-weight:600;font-size:22px;letter-spacing:-.01em}
+  .brand small{display:block;color:var(--muted);font-size:12px;font-weight:500;letter-spacing:.02em;margin-top:1px}
+  .month-nav{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--hair);
+    border-radius:999px;padding:5px 6px;box-shadow:var(--shadow)}
+  .month-nav button{border:none;background:transparent;cursor:pointer;width:30px;height:30px;border-radius:50%;
+    font-size:16px;color:var(--ink);display:grid;place-items:center;transition:background .15s}
+  .month-nav button:hover{background:var(--brand-soft)}
+  .month-nav .label{min-width:128px;text-align:center;font-weight:600;font-size:14px;text-transform:capitalize}
+
+  /* ---------- Layout ---------- */
+  .grid-main{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start}
+  @media(max-width:880px){.grid-main{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--hair);border-radius:18px;box-shadow:var(--shadow)}
+  .card-pad{padding:22px}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+  /* ---------- Hero overview ---------- */
+  .hero{display:flex;gap:26px;align-items:center;flex-wrap:wrap}
+  .hero .figure{flex:1;min-width:180px}
+  .hero .total{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(34px,6vw,52px);letter-spacing:-.02em;line-height:1}
+  .hero .total.neg{color:var(--warn)}
+  .stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:22px;border-top:1px solid var(--hair);padding-top:18px}
+  .stat-row .s{padding-right:14px}
+  .stat-row .s + .s{border-left:1px solid var(--hair);padding-left:18px}
+  .stat-row .v{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:18px;letter-spacing:-.01em}
+  .stat-row .v.spent{color:var(--warn)}
+  .stat-row .v.pos{color:var(--pos)}
+  .stat-row .k{font-size:12px;color:var(--muted);margin-top:3px}
+
+  /* ---------- Quick add ---------- */
+  .qa-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .qa-title h2{font-family:'Fraunces',serif;font-weight:600;font-size:19px}
+  .seg{display:inline-flex;background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:3px;margin-bottom:14px;gap:3px}
+  .seg button{border:1.5px solid transparent;background:transparent;font-family:inherit;font-weight:600;font-size:13px;color:var(--muted);padding:7px 18px;border-radius:8px;cursor:pointer;transition:all .15s}
+  .seg button:hover{color:var(--ink)}
+  .seg button.active{box-shadow:0 1px 3px rgba(26,25,22,.10)}
+  .seg button[data-mode="expense"].active{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+  .seg button[data-mode="income"].active{background:#E3F0E8;color:var(--pos);border-color:var(--pos)}
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+  .field label{font-size:12px;font-weight:600;color:var(--muted)}
+  input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--hair);
+    border-radius:11px;padding:11px 12px;width:100%;transition:border .15s,box-shadow .15s}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .field-amount input{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .btn{font-family:inherit;font-weight:600;font-size:14px;border:none;border-radius:11px;padding:12px 18px;cursor:pointer;
+    transition:transform .08s,filter .15s,background .15s;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--brand);color:#F6F4EE}
+  .btn-primary:hover{filter:brightness(1.08)}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--hair)}
+  .btn-ghost:hover{background:var(--brand-soft);border-color:var(--brand-soft)}
+  .btn-full{width:100%}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 22px}
+
+  /* ---------- Pots ---------- */
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin:30px 0 14px}
+  .section-head h2{font-family:'Fraunces',serif;font-weight:600;font-size:22px;letter-spacing:-.01em}
+  .pots{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .pot{background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:17px 17px 16px;box-shadow:var(--shadow);
+    position:relative;overflow:hidden}
+  .pot .swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+  .pot .name{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+  .pot .bal{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:24px;letter-spacing:-.01em;margin:10px 0 2px}
+  .pot .bal.neg{color:var(--warn)}
+  .pot .sub{font-size:12px;color:var(--muted)}
+  .pot .bar{height:6px;border-radius:99px;background:var(--hair);margin-top:13px;overflow:hidden}
+  .pot .bar i{display:block;height:100%;border-radius:99px}
+  .pot .meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:7px}
+
+  /* ---------- History ---------- */
+  .filter-row{display:flex;gap:10px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  .filter-row select{width:auto;min-width:160px;padding:9px 12px}
+  .hist{list-style:none}
+  .hist li{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--hair)}
+  .hist li:last-child{border-bottom:none}
+  .hist .swatch{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+  .hist .info{flex:1;min-width:0}
+  .hist .info b{font-weight:600;font-size:14px}
+  .hist .info .det{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hist .amt{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:15px}
+  .hist .del{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;padding:4px 6px;border-radius:7px;line-height:1}
+  .hist .del:hover{background:var(--warn-soft);color:var(--warn)}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--brand);
+    background:var(--brand-soft);padding:3px 9px;border-radius:99px}
+  .empty{text-align:center;color:var(--muted);padding:34px 10px;font-size:14px}
+
+  /* ---------- Modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(26,25,22,.42);backdrop-filter:blur(2px);display:none;
+    align-items:flex-start;justify-content:center;padding:42px 18px;z-index:50;overflow:auto}
+  .overlay.show{display:flex}
+  .modal{background:var(--card);border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.25);width:100%;max-width:520px;
+    border:1px solid var(--hair);animation:pop .18s ease}
+  @keyframes pop{from{transform:translateY(10px) scale(.99);opacity:0}to{transform:none;opacity:1}}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px;border-bottom:1px solid var(--hair)}
+  .modal-head h3{font-family:'Fraunces',serif;font-weight:600;font-size:19px}
+  .modal-head .x{border:none;background:transparent;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
+  .modal-body{padding:20px 22px;max-height:64vh;overflow:auto}
+  .modal-foot{padding:16px 22px;border-top:1px solid var(--hair);display:flex;gap:10px;justify-content:flex-end}
+
+  .topup-row,.setting-row{display:grid;grid-template-columns:14px 1fr 120px;gap:11px;align-items:center;padding:9px 0;border-bottom:1px solid var(--hair)}
+  .topup-row:last-child,.setting-row:last-child{border-bottom:none}
+  .topup-row .nm{font-weight:600;font-size:14px}
+  .topup-row input,.setting-row input{padding:8px 10px;font-family:'JetBrains Mono',monospace}
+  .setting-row{grid-template-columns:14px 1fr 96px 96px 30px}
+  .setting-row .txt{font-family:'Hanken Grotesk',sans-serif}
+  .setting-row .trash{border:none;background:transparent;cursor:pointer;color:var(--muted);font-size:15px}
+  .setting-row .trash:hover{color:var(--warn)}
+  .topup-total{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:2px solid var(--ink)}
+  .topup-total b{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600}
+  .hint{font-size:12px;color:var(--muted);margin:-4px 0 14px}
+  .add-pot-row{display:flex;gap:10px;margin-top:14px}
+  .add-pot-row input{flex:1}
+
+  /* ---------- Toast ---------- */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);
+    color:#F6F4EE;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .25s;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  #loader{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:99;color:var(--muted);font-size:14px}
+  .reset-link{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit}
+  .reset-link:hover{color:var(--warn)}
+  .warn-banner{background:var(--warn-soft);border:1px solid #e6c3ba;color:#8a3322;border-radius:14px;
+    padding:13px 16px;font-size:13px;font-weight:500;margin:6px 0 24px;line-height:1.45}
+  .backup-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);margin-top:34px}
+  .backup-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .sdot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;margin-top:5px}
+  .sdot.green{background:var(--pos)} .sdot.amber{background:#C2A35A} .sdot.grey{background:var(--muted)}
+  .pot{cursor:pointer;transition:transform .08s,box-shadow .15s}
+  .pot:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(26,25,22,.10)}
+  .pot:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  .btn-danger{background:var(--warn);color:#fff}
+  .btn-danger:hover{filter:brightness(1.07)}
+  .btn-danger.armed{animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+  .note{border:1px solid var(--hair);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff}
+  .note-body{font-size:14px;white-space:pre-wrap;word-break:break-word;line-height:1.5}
+  .note-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .note-date{font-size:11px;color:var(--muted)}
+  .lnk{background:none;border:none;color:var(--brand);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:2px 6px;border-radius:6px}
+  .lnk:hover{background:var(--brand-soft)}
+  .note-edit{width:100%;font-family:inherit;font-size:14px;resize:vertical}
+  .note-actions{display:flex;gap:8px;margin-top:10px}
+  .note-actions .btn{padding:8px 14px;font-size:13px}
+  .detail-balance{font-family:'Fraunces',serif;font-weight:600;font-size:38px;letter-spacing:-.02em;line-height:1}
+  .detail-balance.neg{color:var(--warn)}
+  .detail-tx{list-style:none;margin-top:6px}
+  .detail-tx li{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid var(--hair)}
+  .detail-tx li:last-child{border-bottom:none}
+  .detail-tx .info{flex:1;min-width:0}
+  .detail-tx .info b{font-weight:600;font-size:14px}
+  .detail-tx .info .det{font-size:12px;color:var(--muted)}
+  .detail-tx .amt{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px}
+  .detail-tx .amt.exp{color:var(--warn)} .detail-tx .amt.dep{color:var(--pos)}
+  .detail-tx .del{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;border-radius:7px;padding:3px 5px;line-height:1}
+  .hist .edit,.detail-tx .edit{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;border-radius:7px;padding:3px 5px;line-height:1}
+  .hist .edit:hover,.detail-tx .edit:hover{background:var(--brand-soft);color:var(--brand)}
+  .check-row{display:flex;align-items:center;gap:13px;padding:12px 8px;border-bottom:1px solid var(--hair);cursor:pointer;font-size:14px;border-radius:8px}
+  .check-row:last-child{border-bottom:none}
+  .check-row:hover{background:var(--brand-soft)}
+  .check-row input[type=checkbox]{appearance:auto;-webkit-appearance:checkbox;width:18px;height:18px;min-width:18px;padding:0;margin:0;border:none;box-shadow:none;accent-color:var(--brand);cursor:pointer;flex:0 0 auto}
+  .check-row.checked span{color:var(--muted);text-decoration:line-through}
+  .detail-tx .del:hover{background:var(--warn-soft);color:var(--warn)}
+  .budget-box{background:var(--brand-soft);border-radius:12px;padding:14px;margin:16px 0}
+  .budget-box .row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div id="loader">Lade Daten …</div>
+
+<header class="top">
+  <div class="brand">
+    <div class="dot"></div>
+    <div>
+      <h1 class="serif">Budget Töpfe</h1>
+      <small>Persönliche Budgetübersicht · CHF</small>
+    </div>
+  </div>
+  <div class="month-nav">
+    <button id="prevMonth" title="Vorheriger Monat">‹</button>
+    <span class="label" id="monthLabel">—</span>
+    <button id="nextMonth" title="Nächster Monat">›</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div id="storageWarn" class="warn-banner" style="display:none">
+    ⚠ In dieser Vorschau wird nichts dauerhaft gespeichert. Lade die Datei herunter und öffne sie direkt auf deinem Gerät – dann bleiben deine Eingaben lokal erhalten.
+  </div>
+
+  <!-- OVERVIEW + QUICK ADD -->
+  <div class="grid-main">
+    <div class="card card-pad">
+      <div class="eyebrow">Übersicht</div>
+      <div class="hero" style="margin-top:14px">
+        <div class="figure">
+          <div class="total mono" id="totalBalance">—</div>
+          <div style="color:var(--muted);font-size:13px;margin-top:6px">Gesamtbudget (Summe aller Töpfe)</div>
+          <div class="stat-row">
+            <div class="s"><div class="v spent" id="statSpent">—</div><div class="k" id="statSpentLabel">Ausgaben</div></div>
+            <div class="s"><div class="v pos" id="statDeposit">—</div><div class="k">Einnahmen</div></div>
+            <div class="s"><div class="v" id="statCount">—</div><div class="k">Buchungen</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-pad">
+      <div class="qa-title"><h2 class="serif" id="entryTitle">Ausgabe erfassen</h2></div>
+      <div class="seg" id="modeToggle">
+        <button type="button" data-mode="expense" class="active">Ausgabe</button>
+        <button type="button" data-mode="income">Einnahme</button>
+      </div>
+      <div class="field field-amount">
+        <label for="amount">Höhe (CHF)</label>
+        <input type="number" id="amount" inputmode="decimal" step="0.05" min="0" placeholder="0.00">
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="potSelect">Topf</label>
+          <select id="potSelect"></select>
+        </div>
+        <div class="field">
+          <label for="dateInput">Datum</label>
+          <input type="date" id="dateInput">
+        </div>
+      </div>
+      <div class="field">
+        <label for="reason">Grund</label>
+        <input type="text" id="reason" placeholder="z.B. Einkauf Migros">
+      </div>
+      <button class="btn btn-primary btn-full" id="addExpense">＋ Ausgabe buchen</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-ghost" id="openSettings">⚙ Töpfe verwalten</button>
+  </div>
+
+  <!-- POTS -->
+  <div class="section-head">
+    <h2 class="serif">Töpfe</h2>
+    <span class="badge" id="potCountBadge">—</span>
+  </div>
+  <div class="pots" id="pots"></div>
+
+  <!-- CHECKLIST -->
+  <div class="section-head">
+    <h2 class="serif">Buchungen/Bestellungen berücksichtigt</h2>
+    <span class="badge" id="checkBadge">—</span>
+  </div>
+  <div class="card card-pad"><div id="checklist"></div></div>
+
+  <!-- HISTORY -->
+  <div class="section-head">
+    <h2 class="serif">Verlauf</h2>
+  </div>
+  <div class="card card-pad">
+    <div class="filter-row">
+      <select id="histFilter"><option value="all">Alle Töpfe</option></select>
+      <select id="histScope">
+        <option value="month">Nur gewählter Monat</option>
+        <option value="all">Gesamter Verlauf</option>
+      </select>
+    </div>
+    <ul class="hist" id="hist"></ul>
+  </div>
+
+  <!-- NOTES -->
+  <div class="section-head">
+    <h2 class="serif">Notizen</h2>
+    <button class="btn btn-ghost" id="addNote">＋ Notiz</button>
+  </div>
+  <div class="card card-pad"><div id="notes"></div></div>
+
+  <div class="backup-bar" id="syncCard" style="flex-direction:column;align-items:stretch;gap:14px">
+    <div>
+      <div class="eyebrow">Synchronisierung · PC</div>
+      <p class="hint" id="syncStatus" style="margin:8px 0 0;max-width:700px;display:flex;gap:8px;align-items:flex-start"></p>
+    </div>
+    <div class="backup-actions">
+      <button class="btn btn-primary" id="syncBtn"></button>
+      <button class="btn btn-ghost" id="syncBtn2" style="display:none"></button>
+    </div>
+  </div>
+
+  <div class="backup-bar">
+    <div>
+      <div class="eyebrow">Backup &amp; Übertragung</div>
+      <p class="hint" style="margin:6px 0 0;max-width:470px">Am Handy erfasste Buchungen überträgst du, indem du dort „Backup exportieren" wählst und die Datei am PC über „Einnahmen & Ausgaben übernehmen" einliest – dabei werden nur neue Einträge ergänzt. „Backup wiederherstellen" ersetzt alle Daten (nur für den Notfall).</p>
+    </div>
+    <div class="backup-actions">
+      <button class="btn btn-ghost" id="exportBtn">⤓ Backup exportieren</button>
+      <button class="btn btn-ghost" id="mergeBtn">⇄ Einnahmen &amp; Ausgaben übernehmen</button>
+      <button class="btn btn-ghost" id="replaceBtn">⤒ Backup wiederherstellen</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:22px">
+    <button class="reset-link" id="resetBtn">Alle Daten zurücksetzen</button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3 class="serif">Töpfe verwalten</h3><button class="x" data-close>×</button></div>
+    <div class="modal-body">
+      <p class="hint">Name, Monatsbeitrag und Anfangsstand pro Topf. Änderungen wirken sofort auf die Übersicht.</p>
+      <div class="setting-row" style="color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--hair)">
+        <span></span><span>Name</span><span>Beitrag/M</span><span>Anfang</span><span></span>
+      </div>
+      <div id="settingRows"></div>
+      <div class="add-pot-row">
+        <input type="text" id="newPotName" placeholder="Neuer Topf …">
+        <button class="btn btn-ghost" id="addPot">Hinzufügen</button>
+      </div>
+      <div style="margin-top:16px;border-top:1px solid var(--hair);padding-top:14px">
+        <button class="btn btn-ghost" id="mergeDupes">⥢ Doppelte Töpfe zusammenführen</button>
+        <p class="hint" style="margin:8px 0 0">Führt Töpfe mit identischem Namen zu einem zusammen. Buchungen, Anfangsstände und Budgets bleiben erhalten.</p>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" data-close>Fertig</button>
+    </div>
+  </div>
+</div>
+
+<!-- POT DETAIL MODAL -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3 class="serif" id="detailTitle"></h3><button class="x" data-close>×</button></div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-foot"><button class="btn btn-primary" data-close>Schliessen</button></div>
+  </div>
+</div>
+
+<!-- RESET MODAL -->
+<div class="overlay" id="resetOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3 class="serif">Daten zurücksetzen</h3><button class="x" data-close>×</button></div>
+    <div class="modal-body">
+      <div class="warn-banner">⚠ Diese Aktion kann nicht rückgängig gemacht werden. Exportiere am besten vorher ein Backup.</div>
+      <div class="field"><label for="resetScope">Was möchtest du zurücksetzen?</label>
+        <select id="resetScope">
+          <option value="all">Alles – Töpfe, Ausgaben, Einnahmen, Notizen</option>
+          <option value="range">Nur einen Zeitraum – Ausgaben &amp; Einnahmen</option>
+        </select>
+      </div>
+      <div id="resetRange" style="display:none">
+        <div class="two">
+          <div class="field"><label for="resetFrom">Von Monat</label><input type="month" id="resetFrom"></div>
+          <div class="field"><label for="resetTo">Bis Monat</label><input type="month" id="resetTo"></div>
+        </div>
+        <p class="hint">Löscht alle Ausgaben und Einnahmen in diesem Zeitraum (beide Monate eingeschlossen). Töpfe, Budgets und Notizen bleiben erhalten.</p>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close>Abbrechen</button>
+      <button class="btn btn-danger" id="resetConfirm">Zurücksetzen</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT BOOKING MODAL -->
+<div class="overlay" id="editOverlay" style="z-index:60">
+  <div class="modal">
+    <div class="modal-head"><h3 class="serif" id="editTitle">Buchung bearbeiten</h3><button class="x" id="editClose">×</button></div>
+    <div class="modal-body">
+      <div class="seg" id="editModeToggle">
+        <button type="button" data-mode="expense">Ausgabe</button>
+        <button type="button" data-mode="income">Einnahme</button>
+      </div>
+      <div class="field field-amount"><label for="editAmount">Höhe (CHF)</label><input type="number" id="editAmount" step="0.05" min="0"></div>
+      <div class="two">
+        <div class="field"><label for="editPot">Topf</label><select id="editPot"></select></div>
+        <div class="field"><label for="editDate">Datum</label><input type="date" id="editDate"></div>
+      </div>
+      <div class="field"><label for="editReason">Grund</label><input type="text" id="editReason"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="editCancel">Abbrechen</button>
+      <button class="btn btn-primary" id="editSave">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const PALETTE = ['#14533C','#2E7D52','#5C9A6E','#8FB996','#C2A35A','#D98C5F','#B5654A','#6E7E8A','#3C5A6E','#A0894B','#4E7C6B'];
+const DEFAULT_POTS = ['Sparen','Investitionen','Spende','Spass','Lebensmittel','Gesundheit','Notfall / Sonstiges','Arzt','Zahnarzt','Immobilie - Rielasingen','Immobilie - Gottmadingen','Anna'];
+const CHECK_ITEMS = ['Belege','Consors Konten','Amazon Bestellungen','Paypal','Ebay','Postfinance & Ebill','Migros Kreditkarte','Wise'];
+// Kopplungen: Buchung im Quell-Topf erzeugt automatisch eine gespiegelte Buchung (umgekehrter Typ, gleicher Betrag) im Ziel-Topf.
+// Weitere Kopplungen lassen sich hier einfach ergänzen.
+const MIRROR_RULES = [
+  { source:'Immobilie - Gottmadingen', target:'Anna' }
+];
+const STORAGE_KEY = 'budget-toepfe-state';
+const fmt = n => new Intl.NumberFormat('de-CH',{style:'currency',currency:'CHF',minimumFractionDigits:2}).format(n||0);
+const uid = () => Math.random().toString(36).slice(2,10);
+const todayISO = () => { const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
+const monthOf = iso => (iso||'').slice(0,7);
+
+let state = { pots:[], expenses:[], deposits:[] };
+let viewMonth = monthOf(todayISO());
+let storageOK = true;
+
+/* ---------- Persistenz: rein lokal (localStorage), kein Cloud-Zugriff ---------- */
+function checkStorage(){
+  try{ const k='__test__'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }
+  catch(e){ return false; }
+}
+function loadState(){
+  storageOK = checkStorage();
+  try{
+    const raw = storageOK ? localStorage.getItem(STORAGE_KEY) : null;
+    if(raw){ state = JSON.parse(raw); } else seed();
+  }catch(e){ seed(); }
+  if(!state.pots || !state.pots.length) seed();
+  state = normalize(state);
+}
+function seed(){
+  state = {
+    version:2,
+    pots: DEFAULT_POTS.map((n,i)=>({id:uid(),name:n,color:PALETTE[i%PALETTE.length],monthly:0,opening:0,budgets:{}})),
+    expenses:[], deposits:[], notes:[], checks:{}
+  };
+}
+async function save(){
+  if(storageOK){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ toast('Speichern fehlgeschlagen'); }
+  }
+  if(fileHandle){ await writeFile(); }
+}
+
+/* ---------- PC-Synchronisierung: automatische Speicherung in eine Datei im Google-Drive-Ordner ----------
+   Nutzt die File System Access API (Chrome/Edge am Desktop). Keine fremde Anmeldung nötig:
+   Die Datei liegt in deinem lokal synchronisierten Drive-Ordner; Google Drive lädt sie wie gewohnt hoch. */
+const fsSupported = ('showSaveFilePicker' in window);
+let fileHandle = null;     // aktive Verbindung
+let storedHandle = null;   // hinterlegte Datei, die beim Start einmal bestätigt werden muss
+
+function idbReq(mode, fn){
+  return new Promise((res,rej)=>{
+    const open = indexedDB.open('budget-toepfe-fs',1);
+    open.onupgradeneeded = () => { if(!open.result.objectStoreNames.contains('h')) open.result.createObjectStore('h'); };
+    open.onsuccess = () => {
+      const tx = open.result.transaction('h',mode);
+      const r = fn(tx.objectStore('h'));
+      tx.oncomplete = () => res(r ? r.result : undefined);
+      tx.onerror = () => rej(tx.error);
+    };
+    open.onerror = () => rej(open.error);
+  });
+}
+const idbGet = k => idbReq('readonly', s => s.get(k));
+const idbSet = (k,v) => idbReq('readwrite', s => s.put(v,k));
+const idbDel = k => idbReq('readwrite', s => s.delete(k));
+
+async function writeFile(){
+  if(!fileHandle) return;
+  try{
+    const w = await fileHandle.createWritable();
+    await w.write(JSON.stringify(state,null,2));
+    await w.close();
+  }catch(e){ toast('Schreiben in die Drive-Datei fehlgeschlagen'); }
+}
+async function readFileData(){
+  const f = await fileHandle.getFile();
+  const text = (await f.text()).trim();
+  if(!text) return null;
+  const obj = JSON.parse(text);
+  if(!obj || !Array.isArray(obj.pots)) return null;
+  return normalize(obj);
+}
+function mirrorLocal(){ if(storageOK){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} } }
+
+async function connectFile(){
+  if(!fsSupported){ toast('Auf diesem Gerät nicht verfügbar'); return; }
+  try{
+    const handle = await window.showSaveFilePicker({
+      suggestedName:'budget-toepfe-daten.json',
+      types:[{description:'Budget-Daten', accept:{'application/json':['.json']}}]
+    });
+    fileHandle = handle;
+    const data = await readFileData();
+    if(data){
+      if(confirm('Diese Datei enthält bereits Budget-Daten.\n\nOK = Daten aus der Datei laden und verwenden.\nAbbrechen = aktuelle Daten behalten und die Datei damit überschreiben.')){
+        state = data;
+      } else {
+        await writeFile();
+      }
+    } else {
+      await writeFile();
+    }
+    await idbSet('handle', handle);
+    storedHandle = handle;
+    mirrorLocal(); render(); renderSync();
+    toast('Verbunden – Eingaben werden ab jetzt automatisch gespeichert');
+  }catch(e){
+    if(e && e.name==='AbortError') return;
+    toast('Verbindung nicht möglich (' + (e.name||'Fehler') + ')');
+  }
+}
+async function reconnectFile(){
+  if(!storedHandle) return;
+  try{
+    const perm = await storedHandle.requestPermission({mode:'readwrite'});
+    if(perm!=='granted'){ toast('Zugriff nicht erteilt'); return; }
+    fileHandle = storedHandle;
+    const data = await readFileData();
+    if(data){ state = data; mirrorLocal(); }
+    render(); renderSync();
+    toast('Wieder mit der Drive-Datei verbunden');
+  }catch(e){ toast('Wiederverbinden fehlgeschlagen'); }
+}
+async function disconnectFile(){
+  fileHandle = null; storedHandle = null;
+  try{ await idbDel('handle'); }catch(e){}
+  renderSync();
+  toast('Verbindung getrennt – Daten bleiben lokal erhalten');
+}
+async function initSync(){
+  if(!fsSupported) return;
+  try{
+    const handle = await idbGet('handle');
+    if(handle){
+      storedHandle = handle;
+      const perm = await handle.queryPermission({mode:'readwrite'});
+      if(perm==='granted'){
+        fileHandle = handle;
+        const data = await readFileData();
+        if(data){ state = data; mirrorLocal(); }
+      }
+    }
+  }catch(e){}
+}
+function renderSync(){
+  const el = document.getElementById('syncStatus');
+  const btn = document.getElementById('syncBtn');
+  const btn2 = document.getElementById('syncBtn2');
+  if(!el) return;
+  if(!fsSupported){
+    el.innerHTML = '<span class="sdot grey"></span>Automatische Verbindung auf diesem Gerät nicht verfügbar. Hier zum Erfassen nutzen und per „Backup exportieren" an den PC übertragen. Am PC funktioniert die automatische Drive-Speicherung in Chrome oder Edge.';
+    btn.style.display='none'; btn2.style.display='none'; return;
+  }
+  if(fileHandle){
+    el.innerHTML = '<span class="sdot green"></span>Verbunden – jede Eingabe wird automatisch gespeichert in: <b>'+escapeHtml(fileHandle.name)+'</b>';
+    btn.textContent='Verbindung trennen'; btn.style.display=''; btn.onclick=disconnectFile;
+    btn2.style.display='none';
+  } else if(storedHandle){
+    el.innerHTML = '<span class="sdot amber"></span>Eine Drive-Datei ist hinterlegt. Beim Start einmal bestätigen, um die automatische Speicherung zu aktivieren.';
+    btn.textContent='Wieder verbinden'; btn.style.display=''; btn.onclick=reconnectFile;
+    btn2.textContent='Andere Datei wählen'; btn2.style.display=''; btn2.onclick=connectFile;
+  } else {
+    el.innerHTML = '<span class="sdot grey"></span>Noch nicht verbunden. Verbinde das Dashboard mit einer Datei in deinem Google-Drive-Ordner – ab dann wird automatisch dorthin gespeichert.';
+    btn.textContent='Mit Datei in Google Drive verbinden'; btn.style.display=''; btn.onclick=connectFile;
+    btn2.style.display='none';
+  }
+}
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `budget-toepfe-backup-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('Backup exportiert');
+}
+let importMode = 'merge';
+function handleImport(file){
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      const obj = JSON.parse(reader.result);
+      if(!obj || !Array.isArray(obj.pots)) throw new Error('Datei nicht erkannt');
+      if(importMode==='replace'){
+        if(!confirm('ALLE aktuellen Daten durch die Datei ersetzen? Vorhandene Eingaben gehen dabei verloren. (Für vollständige Wiederherstellung eines Backups.)')) return;
+        state = normalize(obj);
+        await save(); render(); toast('Daten ersetzt');
+      } else {
+        // Töpfe nach Namen abgleichen: gleichnamige Töpfe werden zusammengeführt statt doppelt angelegt
+        const existingByName = {};
+        state.pots.forEach(p=> existingByName[(p.name||'').trim().toLowerCase()] = p.id);
+        const existingIds = new Set(state.pots.map(p=>p.id));
+        const potRemap = {}; let addedPots=0, mergedPots=0;
+        (obj.pots||[]).forEach(ip=>{
+          const key=(ip.name||'').trim().toLowerCase();
+          if(existingByName[key]!=null){
+            potRemap[ip.id]=existingByName[key];
+            if(ip.id!==existingByName[key]) mergedPots++;
+          } else {
+            let nid=ip.id; if(!nid || existingIds.has(nid)) nid=uid();
+            state.pots.push({id:nid, name:ip.name, color:ip.color||PALETTE[state.pots.length%PALETTE.length], monthly:Number(ip.monthly||0), opening:Number(ip.opening||0), budgets:(ip.budgets&&typeof ip.budgets==='object')?ip.budgets:{}});
+            existingByName[key]=nid; existingIds.add(nid); potRemap[ip.id]=nid; addedPots++;
+          }
+        });
+        const mapPot = id => potRemap[id]!=null ? potRemap[id] : id;
+
+        const exIds = new Set(state.expenses.map(e=>e.id));
+        const newEx = (obj.expenses||[]).filter(e=>!exIds.has(e.id)).map(e=>({...e, potId:mapPot(e.potId)}));
+        const dpIds = new Set(state.deposits.map(d=>d.id));
+        const newDp = (obj.deposits||[]).filter(d=>!dpIds.has(d.id)).map(d=>{
+          const pp={}, src=d.perPot||{};
+          Object.keys(src).forEach(pid=>{ const t=mapPot(pid); pp[t]=(Number(pp[t])||0)+Number(src[pid]||0); });
+          return {...d, perPot:pp};
+        });
+        if(!Array.isArray(state.notes)) state.notes=[];
+        const noteIds = new Set(state.notes.map(n=>n.id));
+        const newNotes = (obj.notes||[]).filter(n=>!noteIds.has(n.id));
+        state.expenses.push(...newEx);
+        state.deposits.push(...newDp);
+        state.notes.push(...newNotes);
+
+        if(obj.checks && typeof obj.checks==='object'){
+          if(!state.checks) state.checks={};
+          for(const mm in obj.checks){ if(!state.checks[mm]) state.checks[mm]={}; for(const it in obj.checks[mm]){ if(obj.checks[mm][it]) state.checks[mm][it]=true; } }
+        }
+
+        state = normalize(state);
+        await save(); render();
+        let msg = `Übernommen: ${newEx.length} Ausgabe(n)`;
+        if(newDp.length) msg += `, ${newDp.length} Einnahme(n)`;
+        if(addedPots) msg += `, ${addedPots} neue(r) Topf`;
+        if(mergedPots) msg += `, ${mergedPots} Topf/Töpfe automatisch zusammengeführt`;
+        if(newNotes.length) msg += `, ${newNotes.length} Notiz(en)`;
+        toast(msg);
+      }
+    }catch(err){ alert('Import fehlgeschlagen: '+err.message); }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- Computations (monatsbezogen) ---------- */
+const pot = id => state.pots.find(p=>p.id===id);
+const inMonth = (iso,m) => monthOf(iso)===m;
+const upTo = (iso,m) => !!iso && monthOf(iso)<=m;
+const depToPotUpTo = (id,m) => state.deposits.filter(d=>upTo(d.date,m)).reduce((s,d)=>s+(Number(d.perPot?.[id])||0),0);
+const expFromPotUpTo = (id,m) => state.expenses.filter(e=>e.potId===id && upTo(e.date,m)).reduce((s,e)=>s+Number(e.amount),0);
+const potBalanceAsOf = (id,m) => { const p=pot(id); return Number(p.opening||0) + depToPotUpTo(id,m) - expFromPotUpTo(id,m); };
+const totalBalanceAsOf = m => state.pots.reduce((s,p)=>s+potBalanceAsOf(p.id,m),0);
+const spentInMonth = m => state.expenses.filter(e=>inMonth(e.date,m)).reduce((s,e)=>s+Number(e.amount),0);
+const spentPotMonth = (id,m) => state.expenses.filter(e=>e.potId===id && inMonth(e.date,m)).reduce((s,e)=>s+Number(e.amount),0);
+const depPotMonth = (id,m) => state.deposits.filter(d=>inMonth(d.date,m)).reduce((s,d)=>s+(Number(d.perPot?.[id])||0),0);
+const depositInMonth = m => state.deposits.filter(d=>inMonth(d.date,m)).reduce((s,d)=>s+Number(d.total||0),0);
+const countInMonth = m => state.expenses.filter(e=>inMonth(e.date,m)).length;
+const budgetFor = (p,m) => (p.budgets && p.budgets[m]!=null && p.budgets[m]!=='') ? Number(p.budgets[m]) : Number(p.monthly||0);
+const hasOverride = (p,m) => !!(p.budgets && p.budgets[m]!=null && p.budgets[m]!=='');
+const monthLabel = m => { const [y,mo]=m.split('-').map(Number); return new Intl.DateTimeFormat('de-CH',{month:'long',year:'numeric'}).format(new Date(y,mo-1,1)); };
+const monthShort = m => { const [y,mo]=m.split('-').map(Number); return new Intl.DateTimeFormat('de-CH',{month:'short'}).format(new Date(y,mo-1,1)); };
+
+/* ---------- Render ---------- */
+function render(){
+  document.getElementById('monthLabel').textContent = monthLabel(viewMonth);
+  const tb = totalBalanceAsOf(viewMonth);
+  const tbEl = document.getElementById('totalBalance');
+  tbEl.textContent = fmt(tb); tbEl.classList.toggle('neg', tb<0);
+  document.getElementById('statSpent').textContent = fmt(spentInMonth(viewMonth));
+  document.getElementById('statSpentLabel').textContent = 'Ausgaben ' + monthShort(viewMonth);
+  document.getElementById('statDeposit').textContent = fmt(depositInMonth(viewMonth));
+  document.getElementById('statCount').textContent = countInMonth(viewMonth);
+  document.getElementById('potCountBadge').textContent = state.pots.length + ' Töpfe';
+  renderPots();
+  renderHist();
+  renderPotSelect();
+  renderNotes();
+  renderChecklist();
+  if(detailPotId && pot(detailPotId) && document.getElementById('detailOverlay').classList.contains('show')) renderDetail();
+}
+
+function renderPots(){
+  const wrap = document.getElementById('pots');
+  if(!state.pots.length){ wrap.innerHTML = '<div class="empty">Noch keine Töpfe.</div>'; return; }
+  wrap.innerHTML = state.pots.map(p=>{
+    const bal = potBalanceAsOf(p.id, viewMonth);
+    const spent = spentPotMonth(p.id, viewMonth);
+    const budget = budgetFor(p, viewMonth);
+    const pct = budget>0 ? Math.min(100, (spent/budget)*100) : (spent>0?100:0);
+    const over = budget>0 && spent>budget;
+    const barColor = over ? 'var(--warn)' : p.color;
+    const subTxt = budget>0
+      ? `${fmt(spent)} von ${fmt(budget)} · ${monthShort(viewMonth)}`
+      : `${fmt(spent)} ausgegeben · ${monthShort(viewMonth)}`;
+    const ov = hasOverride(p,viewMonth) ? ' ✎' : '';
+    return `<div class="pot" data-pot="${p.id}" role="button" tabindex="0">
+      <div class="name"><span class="swatch" style="background:${p.color}"></span>${escapeHtml(p.name)}</div>
+      <div class="bal mono ${bal<0?'neg':''}">${fmt(bal)}</div>
+      <div class="sub">${subTxt}</div>
+      <div class="bar"><i style="width:${pct}%;background:${barColor}"></i></div>
+      <div class="meta"><span>${over?'⚠ über Budget':(budget>0?Math.round(pct)+'% genutzt':'kein Budget')}</span>
+        <span>Budget: ${fmt(budget)}${ov}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderHist(){
+  const filter = document.getElementById('histFilter').value;
+  const scope = document.getElementById('histScope').value;
+  let items = [];
+  state.expenses.forEach(e=> items.push({kind:'exp', id:e.id, potId:e.potId, amount:Number(e.amount), date:e.date, reason:e.reason, auto:e.auto}));
+  state.deposits.forEach(d=>{ const pp=d.perPot||{}; Object.keys(pp).forEach(pid=> items.push({kind:'dep', id:d.id, potId:pid, amount:Number(pp[pid]||0), date:d.date, reason:d.reason||'Einnahme', auto:d.auto})); });
+  if(filter!=='all') items = items.filter(i=>i.potId===filter);
+  if(scope==='month') items = items.filter(i=>monthOf(i.date)===viewMonth);
+  items.sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.id||'').localeCompare(a.id||''));
+  const ul = document.getElementById('hist');
+  if(!items.length){ ul.innerHTML = '<div class="empty">Keine Buchungen in dieser Ansicht.</div>'; return; }
+  ul.innerHTML = items.map(t=>{
+    const p = pot(t.potId);
+    const d = t.date ? new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(t.date)) : '';
+    const sign = t.kind==='exp' ? '−' : '+';
+    return `<li>
+      <span class="swatch" style="background:${p?p.color:'#ccc'}"></span>
+      <div class="info">
+        <b>${escapeHtml(t.reason||'—')}</b>
+        <div class="det">${p?escapeHtml(p.name):'?'} · ${t.kind==='exp'?'Ausgabe':'Einnahme'}${t.auto?' · ⟳ automatisch':''} · ${d}</div>
+      </div>
+      <span class="amt ${t.kind==='exp'?'':'pos'}">${sign}${fmt(t.amount)}</span>
+      ${t.auto?'':`<button class="edit" data-histedit="${t.id}" data-kind="${t.kind}" data-pot="${t.potId}" title="Bearbeiten">✎</button>`}
+      <button class="del" data-histdel="${t.id}" data-kind="${t.kind}" data-pot="${t.potId}" title="Löschen">🗑</button>
+    </li>`;
+  }).join('');
+}
+
+function renderChecklist(){
+  const wrap=document.getElementById('checklist'); if(!wrap) return;
+  const cm = state.checks[viewMonth] || {};
+  let done=0;
+  wrap.innerHTML = CHECK_ITEMS.map(it=>{
+    const checked = !!cm[it]; if(checked) done++;
+    return `<label class="check-row${checked?' checked':''}">
+      <input type="checkbox" data-check="${escapeHtml(it)}" ${checked?'checked':''}>
+      <span>${escapeHtml(it)}</span></label>`;
+  }).join('');
+  const badge=document.getElementById('checkBadge'); if(badge) badge.textContent = done+'/'+CHECK_ITEMS.length+' · '+monthShort(viewMonth);
+}
+async function toggleCheck(item, val){
+  if(!state.checks[viewMonth]) state.checks[viewMonth]={};
+  if(val) state.checks[viewMonth][item]=true; else delete state.checks[viewMonth][item];
+  if(!Object.keys(state.checks[viewMonth]).length) delete state.checks[viewMonth];
+  await save(); renderChecklist();
+}
+
+function renderPotSelect(){
+  const cur = document.getElementById('potSelect').value;
+  document.getElementById('potSelect').innerHTML =
+    state.pots.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  if(cur) document.getElementById('potSelect').value = cur;
+  const f = document.getElementById('histFilter'); const fcur=f.value;
+  f.innerHTML = '<option value="all">Alle Töpfe</option>' +
+    state.pots.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  f.value = fcur || 'all';
+}
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ---------- Actions ---------- */
+let entryMode = 'expense';
+function setMode(m){
+  entryMode = m;
+  document.querySelectorAll('#modeToggle button').forEach(b=>b.classList.toggle('active', b.dataset.mode===m));
+  document.getElementById('entryTitle').textContent = m==='income' ? 'Einnahme erfassen' : 'Ausgabe erfassen';
+  document.getElementById('addExpense').textContent = m==='income' ? '＋ Einnahme buchen' : '＋ Ausgabe buchen';
+  document.getElementById('reason').placeholder = m==='income' ? 'z.B. Lohn, Rückzahlung von Anna' : 'z.B. Einkauf Migros';
+}
+function ruleForPotName(name){ return MIRROR_RULES.find(r=>r.source.trim().toLowerCase()===(name||'').trim().toLowerCase()); }
+function potByName(name){ return state.pots.find(p=>(p.name||'').trim().toLowerCase()===(name||'').trim().toLowerCase()); }
+function removeByLink(link){ if(!link) return; state.expenses=state.expenses.filter(e=>e.link!==link); state.deposits=state.deposits.filter(d=>d.link!==link); }
+function removeMirror(link){ if(!link) return; state.expenses=state.expenses.filter(e=>!(e.link===link&&e.auto)); state.deposits=state.deposits.filter(d=>!(d.link===link&&d.auto)); }
+function createMirror(sourcePotId, kind, amt, date, reason){
+  const sp = pot(sourcePotId); const rule = ruleForPotName(sp && sp.name); if(!rule) return null;
+  const target = potByName(rule.target);
+  if(!target){ toast('Hinweis: Topf „'+rule.target+'" fehlt – keine automatische Spiegelung'); return null; }
+  if(target.id===sourcePotId) return null;
+  const link = uid(); const note = reason || sp.name;
+  if(kind==='income'){ state.expenses.push({id:uid(), amount:amt, potId:target.id, date, reason:note, link, auto:true}); }
+  else { state.deposits.push({id:uid(), date, total:amt, perPot:{[target.id]:amt}, reason:note, link, auto:true}); }
+  return link;
+}
+
+async function addEntry(){
+  const amt = parseFloat(document.getElementById('amount').value);
+  const potId = document.getElementById('potSelect').value;
+  const date = document.getElementById('dateInput').value || todayISO();
+  const reason = document.getElementById('reason').value.trim();
+  if(!(amt>0)){ toast('Bitte einen Betrag > 0 eingeben'); return; }
+  if(!potId){ toast('Bitte einen Topf wählen'); return; }
+  let primary;
+  if(entryMode==='income'){ primary={id:uid(), date, total:amt, perPot:{[potId]:amt}, reason}; state.deposits.push(primary); }
+  else { primary={id:uid(), amount:amt, potId, date, reason}; state.expenses.push(primary); }
+  const link = createMirror(potId, entryMode, amt, date, reason);
+  if(link) primary.link = link;
+  await save();
+  document.getElementById('amount').value='';
+  document.getElementById('reason').value='';
+  render();
+  toast((entryMode==='income'?'Einnahme':'Ausgabe')+' gebucht: '+fmt(amt)+(link?' · Anna automatisch aktualisiert':''));
+}
+
+async function deleteExpense(id){
+  const e = state.expenses.find(x=>x.id===id); const link = e && e.link;
+  state.expenses = state.expenses.filter(e=>e.id!==id);
+  if(link) removeByLink(link);
+  await save(); render(); toast('Ausgabe gelöscht');
+}
+async function deleteDepositPortion(depId, potId){
+  const d = state.deposits.find(x=>x.id===depId); if(!d) return;
+  const link = d.link;
+  if(d.perPot) delete d.perPot[potId];
+  d.total = Object.values(d.perPot||{}).reduce((s,v)=>s+Number(v||0),0);
+  if(!Object.keys(d.perPot||{}).length) state.deposits = state.deposits.filter(x=>x.id!==depId);
+  if(link) removeByLink(link);
+  await save(); render(); toast('Einnahme gelöscht');
+}
+let editTarget=null; // {kind:'exp'|'dep', id, potId}
+let editType='expense';
+function setEditMode(m){ editType=m; document.querySelectorAll('#editModeToggle button').forEach(b=>b.classList.toggle('active', b.dataset.mode===m)); }
+function openEdit(kind,id,potId){
+  let amount,date,reason,pid,booking;
+  if(kind==='exp'){ booking=state.expenses.find(x=>x.id===id); if(!booking) return; amount=Number(booking.amount); date=booking.date; reason=booking.reason||''; pid=booking.potId; }
+  else { booking=state.deposits.find(x=>x.id===id); if(!booking) return; amount=Number(booking.perPot?.[potId]||0); date=booking.date; reason=booking.reason||''; pid=potId; }
+  if(booking.auto){ toast('Diese Buchung wird automatisch erzeugt. Bitte im gekoppelten Topf bearbeiten.'); return; }
+  editTarget={kind,id,potId:pid};
+  document.getElementById('editTitle').textContent='Buchung bearbeiten';
+  setEditMode(kind==='exp'?'expense':'income');
+  document.getElementById('editAmount').value=amount;
+  document.getElementById('editDate').value=date||todayISO();
+  document.getElementById('editReason').value=reason;
+  const sel=document.getElementById('editPot');
+  sel.innerHTML=state.pots.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  sel.value=pid;
+  show('editOverlay');
+  setTimeout(()=>document.getElementById('editAmount').focus(),30);
+}
+async function saveEdit(){
+  if(!editTarget) return;
+  const amt=parseFloat(document.getElementById('editAmount').value);
+  const newPot=document.getElementById('editPot').value;
+  const date=document.getElementById('editDate').value||todayISO();
+  const reason=document.getElementById('editReason').value.trim();
+  if(!(amt>0)){ toast('Bitte einen Betrag > 0 eingeben'); return; }
+  if(!newPot){ toast('Bitte einen Topf wählen'); return; }
+  const wasExp = editTarget.kind==='exp';
+  const nowExp = editType==='expense';
+  let oldLink=null, result=null, resKind=null;
+  if(wasExp){ const e0=state.expenses.find(x=>x.id===editTarget.id); oldLink=e0&&e0.link; }
+  else { const d0=state.deposits.find(x=>x.id===editTarget.id); oldLink=d0&&d0.link; }
+  if(wasExp && nowExp){
+    const e=state.expenses.find(x=>x.id===editTarget.id); if(!e) return;
+    e.amount=amt; e.potId=newPot; e.date=date; e.reason=reason; delete e.link; delete e.auto;
+    result=e; resKind='exp';
+  } else if(!wasExp && !nowExp){
+    const d=state.deposits.find(x=>x.id===editTarget.id); if(!d) return;
+    const oldPot=editTarget.potId; if(!d.perPot) d.perPot={};
+    if(newPot!==oldPot){ delete d.perPot[oldPot]; d.perPot[newPot]=(Number(d.perPot[newPot])||0)+amt; }
+    else { d.perPot[newPot]=amt; }
+    d.total=Object.values(d.perPot).reduce((s,v)=>s+Number(v||0),0);
+    d.date=date; d.reason=reason; delete d.link; delete d.auto;
+    result=d; resKind='dep';
+  } else if(wasExp && !nowExp){
+    state.expenses=state.expenses.filter(x=>x.id!==editTarget.id);
+    result={id:uid(), date, total:amt, perPot:{[newPot]:amt}, reason}; state.deposits.push(result); resKind='dep';
+  } else {
+    const d=state.deposits.find(x=>x.id===editTarget.id);
+    if(d){ if(d.perPot) delete d.perPot[editTarget.potId]; d.total=Object.values(d.perPot||{}).reduce((s,v)=>s+Number(v||0),0); if(!Object.keys(d.perPot||{}).length) state.deposits=state.deposits.filter(x=>x.id!==d.id); }
+    result={id:uid(), amount:amt, potId:newPot, date, reason}; state.expenses.push(result); resKind='exp';
+  }
+  // Alte automatische Spiegelung entfernen und ggf. neu erzeugen
+  if(oldLink) removeMirror(oldLink);
+  const link = createMirror(newPot, resKind==='dep'?'income':'expense', amt, date, reason);
+  if(link){ result.link = link; } else { delete result.link; }
+  await save(); closeEdit(); render(); toast('Buchung gespeichert');
+}
+function closeEdit(){ hide('editOverlay'); editTarget=null; }
+
+/* ---- Einstellungen folgen unten ---- */
+
+/* ---- Settings ---- */
+function openSettings(){ renderSettings(); show('settingsOverlay'); }
+function renderSettings(){
+  document.getElementById('settingRows').innerHTML = state.pots.map(p=>`
+    <div class="setting-row" data-id="${p.id}">
+      <span class="swatch" style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${p.color}"></span>
+      <input class="txt set-name" value="${escapeHtml(p.name)}">
+      <input type="number" class="set-monthly" step="0.05" value="${Number(p.monthly||0)}">
+      <input type="number" class="set-opening" step="0.05" value="${Number(p.opening||0)}">
+      <button class="trash" data-trash="${p.id}" title="Löschen">🗑</button>
+    </div>`).join('');
+  const container = document.getElementById('settingRows');
+  container.querySelectorAll('.setting-row').forEach(row=>{
+    const id=row.dataset.id;
+    row.querySelector('.set-name').addEventListener('change',e=>updatePot(id,'name',e.target.value));
+    row.querySelector('.set-monthly').addEventListener('change',e=>updatePot(id,'monthly',parseFloat(e.target.value)||0));
+    row.querySelector('.set-opening').addEventListener('change',e=>updatePot(id,'opening',parseFloat(e.target.value)||0));
+  });
+  container.querySelectorAll('[data-trash]').forEach(b=>b.addEventListener('click',()=>deletePot(b.dataset.trash)));
+}
+async function updatePot(id,key,val){ const p=pot(id); if(!p)return; p[key]=val; await save(); render(); }
+async function addPotAction(){
+  const name = document.getElementById('newPotName').value.trim();
+  if(!name){ toast('Bitte einen Namen eingeben'); return; }
+  state.pots.push({id:uid(),name,color:PALETTE[state.pots.length%PALETTE.length],monthly:0,opening:0,budgets:{}});
+  document.getElementById('newPotName').value='';
+  await save(); renderSettings(); render(); toast('Topf hinzugefügt');
+}
+async function mergeDuplicatePots(){
+  const keepByName={}; const remap={};
+  state.pots.forEach(p=>{ const k=(p.name||'').trim().toLowerCase(); if(keepByName[k]==null) keepByName[k]=p.id; else remap[p.id]=keepByName[k]; });
+  const dupCount=Object.keys(remap).length;
+  if(!dupCount){ toast('Keine doppelten Töpfe gefunden'); return; }
+  if(!confirm(dupCount+' doppelte(n) Topf/Töpfe mit gleichem Namen zusammenführen? Buchungen werden auf den jeweils ersten Topf übertragen.')) return;
+  const keepMap={}; state.pots.forEach(p=>{ keepMap[p.id]=p; });
+  state.expenses.forEach(e=>{ if(remap[e.potId]) e.potId=remap[e.potId]; });
+  state.deposits.forEach(d=>{ if(!d.perPot) return; Object.keys(d.perPot).forEach(pid=>{ if(remap[pid]){ const tgt=remap[pid]; d.perPot[tgt]=(Number(d.perPot[tgt])||0)+(Number(d.perPot[pid])||0); delete d.perPot[pid]; } }); });
+  state.pots.forEach(p=>{ if(remap[p.id]){ const k=keepMap[remap[p.id]]; if(k){ k.opening=Number(k.opening||0)+Number(p.opening||0); for(const mm in (p.budgets||{})){ if(k.budgets[mm]==null) k.budgets[mm]=p.budgets[mm]; } } } });
+  state.pots=state.pots.filter(p=>!remap[p.id]);
+  await save(); renderSettings(); render(); toast(dupCount+' Topf/Töpfe zusammengeführt');
+}
+async function deletePot(id){ const p=pot(id); const n = state.expenses.filter(e=>e.potId===id).length;
+  const msg = n>0 ? `"${p.name}" und ${n} zugehörige Ausgabe(n) löschen?` : `"${p.name}" löschen?`;
+  if(!confirm(msg)) return;
+  state.pots = state.pots.filter(x=>x.id!==id);
+  state.expenses = state.expenses.filter(e=>e.potId!==id);
+  state.deposits.forEach(d=>{ if(d.perPot) delete d.perPot[id]; });
+  await save(); renderSettings(); render(); toast('Topf gelöscht');
+}
+
+/* ---- Notizen ---- */
+let editingNote=null;
+function renderNotes(){
+  const wrap=document.getElementById('notes'); if(!wrap) return;
+  if(!state.notes || !state.notes.length){ wrap.innerHTML='<div class="empty">Noch keine Notizen. Tippe oben auf „＋ Notiz".</div>'; return; }
+  const sorted=[...state.notes].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.id||'').localeCompare(a.id||''));
+  wrap.innerHTML = sorted.map(n=>{
+    const d = n.date ? new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(n.date)) : '';
+    if(n.id===editingNote){
+      return `<div class="note" data-id="${n.id}">
+        <textarea class="note-edit" rows="3" placeholder="Notiz …">${escapeHtml(n.text||'')}</textarea>
+        <div class="note-actions"><button class="btn btn-primary note-save" data-id="${n.id}">Speichern</button>
+          <button class="btn btn-ghost note-cancel">Abbrechen</button></div></div>`;
+    }
+    const body = (n.text||'').trim() ? escapeHtml(n.text) : '<span style="color:var(--muted)">(leere Notiz)</span>';
+    return `<div class="note" data-id="${n.id}">
+      <div class="note-body">${body}</div>
+      <div class="note-foot"><span class="note-date">${d}</span>
+        <span><button class="lnk note-editbtn" data-id="${n.id}">Bearbeiten</button>
+          <button class="lnk note-delbtn" data-id="${n.id}">Löschen</button></span></div></div>`;
+  }).join('');
+}
+async function addNote(){ const n={id:uid(),date:todayISO(),text:''}; state.notes.push(n); editingNote=n.id; await save(); renderNotes();
+  const ta=document.querySelector('.note[data-id="'+n.id+'"] .note-edit'); if(ta) ta.focus(); }
+function startEditNote(id){ editingNote=id; renderNotes(); const ta=document.querySelector('.note[data-id="'+id+'"] .note-edit'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); } }
+async function saveNote(id){ const n=state.notes.find(x=>x.id===id); const ta=document.querySelector('.note[data-id="'+id+'"] .note-edit'); if(n&&ta){ n.text=ta.value; n.date=n.date||todayISO(); } editingNote=null; await save(); renderNotes(); toast('Notiz gespeichert'); }
+async function cancelNote(){ if(editingNote){ const n=state.notes.find(x=>x.id===editingNote); if(n && !(n.text||'').trim()){ state.notes=state.notes.filter(x=>x.id!==editingNote); } } editingNote=null; await save(); renderNotes(); }
+async function deleteNote(id){ if(!confirm('Diese Notiz löschen?')) return; state.notes=state.notes.filter(x=>x.id!==id); if(editingNote===id) editingNote=null; await save(); renderNotes(); toast('Notiz gelöscht'); }
+
+/* ---- Topf-Detailansicht ---- */
+let detailPotId=null;
+function openDetail(id){ detailPotId=id; renderDetail(); show('detailOverlay'); }
+function renderDetail(){
+  const p=pot(detailPotId); if(!p) return;
+  const m=viewMonth;
+  document.getElementById('detailTitle').innerHTML = `<span class="swatch" style="display:inline-block;width:13px;height:13px;border-radius:4px;background:${p.color};vertical-align:middle"></span> ${escapeHtml(p.name)}`;
+  const bal=potBalanceAsOf(p.id,m), spent=spentPotMonth(p.id,m), dep=depPotMonth(p.id,m), budget=budgetFor(p,m), ov=hasOverride(p,m);
+  const exps=state.expenses.filter(e=>e.potId===p.id && inMonth(e.date,m));
+  const deps=state.deposits.filter(d=>inMonth(d.date,m) && d.perPot && d.perPot[p.id]!=null);
+  const tx=[
+    ...deps.map(d=>({type:'dep',id:d.id,date:d.date,amount:Number(d.perPot[p.id]||0),label:(d.reason||'Einnahme'),auto:d.auto})),
+    ...exps.map(e=>({type:'exp',id:e.id,date:e.date,amount:Number(e.amount),label:e.reason||'Ausgabe',auto:e.auto}))
+  ].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const txHtml = tx.length ? tx.map(t=>{
+    const d=t.date?new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'short'}).format(new Date(t.date)):'';
+    const sign=t.type==='exp'?'−':'+';
+    return `<li><div class="info"><b>${escapeHtml(t.label)}</b><div class="det">${t.type==='exp'?'Ausgabe':'Einnahme'}${t.auto?' · ⟳ automatisch':''} · ${d}</div></div>
+      <span class="amt ${t.type==='exp'?'exp':'dep'}">${sign}${fmt(t.amount)}</span>
+      ${t.auto?'':`<button class="edit" data-txtype="${t.type}" data-txid="${t.id}" title="Bearbeiten">✎</button>`}
+      <button class="del" data-txtype="${t.type}" data-txid="${t.id}" title="Entfernen">🗑</button></li>`;
+  }).join('') : '<li><span style="color:var(--muted)">Keine Buchungen in '+monthLabel(m)+'.</span></li>';
+  document.getElementById('detailBody').innerHTML = `
+    <div class="eyebrow">Saldo per ${monthLabel(m)}</div>
+    <div class="detail-balance mono ${bal<0?'neg':''}" style="margin-top:6px">${fmt(bal)}</div>
+    ${bal<0?'<div class="hint" style="margin-top:6px">Negativer Saldo = offener Betrag (z. B. etwas, das du schuldest). Begleicht jemand seine Schuld bei dir, buchst du das als „Einnahme".</div>':''}
+    <div class="stat-row" style="margin-top:16px">
+      <div class="s"><div class="v spent">${fmt(spent)}</div><div class="k">Ausgaben ${monthShort(m)}</div></div>
+      <div class="s"><div class="v pos">${fmt(dep)}</div><div class="k">Einnahmen ${monthShort(m)}</div></div>
+      <div class="s"><div class="v">${fmt(budget)}</div><div class="k">Budget ${monthShort(m)}</div></div>
+    </div>
+    <div class="budget-box">
+      <div class="eyebrow">Monatsbudget für ${monthLabel(m)}</div>
+      <div class="row" style="margin-top:10px">
+        <div class="field" style="margin:0"><label>Betrag (CHF)</label><input type="number" id="detailBudget" step="0.05" value="${budget}"></div>
+        <button class="btn btn-primary" id="detailBudgetSet">Für diesen Monat</button>
+        <button class="btn btn-ghost" id="detailBudgetClear">Standard (${fmt(Number(p.monthly||0))})</button>
+      </div>
+      <p class="hint" style="margin:10px 0 0">${ov?'Für diesen Monat gilt ein abweichender Wert. „Standard" stellt den Normalwert wieder her.':'Aktuell gilt der Standardwert. Den Standard änderst du unter „Töpfe verwalten".'}</p>
+    </div>
+    <div class="eyebrow" style="margin-top:6px">Buchungen in ${monthLabel(m)}</div>
+    <ul class="detail-tx">${txHtml}</ul>`;
+  document.getElementById('detailBudgetSet').onclick=setMonthBudget;
+  document.getElementById('detailBudgetClear').onclick=clearMonthBudget;
+  document.querySelectorAll('#detailBody .del').forEach(b=>b.onclick=()=>removeDetailTx(b.dataset.txtype,b.dataset.txid));
+  document.querySelectorAll('#detailBody .edit').forEach(b=>b.onclick=()=>openEdit(b.dataset.txtype,b.dataset.txid, detailPotId));
+}
+async function setMonthBudget(){ const p=pot(detailPotId); const v=parseFloat(document.getElementById('detailBudget').value); if(isNaN(v)){ toast('Bitte einen Betrag eingeben'); return; } p.budgets[viewMonth]=v; await save(); render(); toast('Budget für '+monthLabel(viewMonth)+' gesetzt'); }
+async function clearMonthBudget(){ const p=pot(detailPotId); if(p.budgets) delete p.budgets[viewMonth]; await save(); render(); toast('Standardbudget aktiv'); }
+async function removeDetailTx(type,id){
+  let link=null;
+  if(type==='exp'){ const e=state.expenses.find(x=>x.id===id); if(!confirm('Diese Ausgabe löschen?')) return; link=e&&e.link; state.expenses=state.expenses.filter(e=>e.id!==id); }
+  else {
+    const d=state.deposits.find(x=>x.id===id); if(!d) return;
+    if(!confirm('Einnahme für '+pot(detailPotId).name+' entfernen ('+fmt(Number(d.perPot[detailPotId]||0))+')?')) return;
+    link=d.link;
+    delete d.perPot[detailPotId];
+    d.total=Object.values(d.perPot||{}).reduce((s,v)=>s+Number(v||0),0);
+    if(!Object.keys(d.perPot||{}).length) state.deposits=state.deposits.filter(x=>x.id!==id);
+  }
+  if(link) removeByLink(link);
+  await save(); render(); toast('Buchung entfernt');
+}
+
+/* ---- Zurücksetzen (mit Doppelbestätigung & Zeitraum) ---- */
+let resetArmed=false;
+function openReset(){
+  resetArmed=false;
+  document.getElementById('resetScope').value='all';
+  document.getElementById('resetRange').style.display='none';
+  document.getElementById('resetFrom').value=viewMonth;
+  document.getElementById('resetTo').value=viewMonth;
+  const rc=document.getElementById('resetConfirm'); rc.textContent='Zurücksetzen'; rc.classList.remove('armed');
+  show('resetOverlay');
+}
+async function doReset(){
+  const rc=document.getElementById('resetConfirm');
+  const scope=document.getElementById('resetScope').value;
+  if(!resetArmed){ resetArmed=true; rc.textContent='Wirklich zurücksetzen? – nochmal klicken'; rc.classList.add('armed'); return; }
+  if(scope==='all'){
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    seed();
+  } else {
+    const a=document.getElementById('resetFrom').value, b=document.getElementById('resetTo').value;
+    if(!a||!b){ toast('Bitte Zeitraum wählen'); resetArmed=false; rc.textContent='Zurücksetzen'; rc.classList.remove('armed'); return; }
+    const lo=a<=b?a:b, hi=a<=b?b:a;
+    const inRange=iso=>{ const mm=monthOf(iso); return mm>=lo && mm<=hi; };
+    state.expenses=state.expenses.filter(e=>!inRange(e.date));
+    state.deposits=state.deposits.filter(d=>!inRange(d.date));
+  }
+  await save(); hide('resetOverlay'); render();
+  toast(scope==='all'?'Alle Daten zurückgesetzt':'Zeitraum gelöscht');
+}
+
+/* ---- Datenformat normalisieren (Abwärtskompatibilität bei App-Updates) ---- */
+function normalize(s){
+  s = (s && typeof s==='object') ? s : {};
+  if(!Array.isArray(s.pots)) s.pots=[];
+  if(!Array.isArray(s.expenses)) s.expenses=[];
+  if(!Array.isArray(s.deposits)) s.deposits=[];
+  if(!Array.isArray(s.notes)) s.notes=[];
+  if(!s.checks || typeof s.checks!=='object' || Array.isArray(s.checks)) s.checks={};
+  s.pots.forEach((p,i)=>{ if(!p.id)p.id=uid(); if(!p.color)p.color=PALETTE[i%PALETTE.length]; p.monthly=Number(p.monthly||0); p.opening=Number(p.opening||0); if(!p.budgets||typeof p.budgets!=='object')p.budgets={}; });
+  s.expenses.forEach(e=>{ if(!e.id)e.id=uid(); });
+  s.deposits.forEach(d=>{ if(!d.id)d.id=uid(); if(!d.perPot||typeof d.perPot!=='object')d.perPot={}; });
+  s.notes.forEach(n=>{ if(!n.id)n.id=uid(); });
+  s.version=2;
+  return s;
+}
+
+/* ---- Misc ---- */
+function show(id){ document.getElementById(id).classList.add('show'); }
+function hide(id){ document.getElementById(id).classList.remove('show'); }
+let toastT;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
+function shiftMonth(delta){
+  let [y,m]=viewMonth.split('-').map(Number); m+=delta;
+  if(m<1){m=12;y--;} if(m>12){m=1;y++;}
+  viewMonth = `${y}-${String(m).padStart(2,'0')}`; render();
+}
+
+/* ---------- Wire up ---------- */
+function bind(){
+  document.getElementById('dateInput').value = todayISO();
+  document.getElementById('addExpense').addEventListener('click',addEntry);
+  document.getElementById('reason').addEventListener('keydown',e=>{ if(e.key==='Enter') addEntry(); });
+  document.getElementById('amount').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('reason').focus(); });
+  document.getElementById('modeToggle').addEventListener('click',e=>{ const b=e.target.closest('button[data-mode]'); if(b) setMode(b.dataset.mode); });
+  document.getElementById('prevMonth').addEventListener('click',()=>shiftMonth(-1));
+  document.getElementById('nextMonth').addEventListener('click',()=>shiftMonth(1));
+  document.getElementById('openSettings').addEventListener('click',openSettings);
+  document.getElementById('addPot').addEventListener('click',addPotAction);
+  document.getElementById('mergeDupes').addEventListener('click',mergeDuplicatePots);
+  document.getElementById('histFilter').addEventListener('change',renderHist);
+  document.getElementById('histScope').addEventListener('change',renderHist);
+  document.getElementById('hist').addEventListener('click',e=>{
+    const ed=e.target.closest('[data-histedit]'); if(ed){ openEdit(ed.dataset.kind, ed.dataset.histedit, ed.dataset.pot); return; }
+    const b=e.target.closest('[data-histdel]'); if(!b) return;
+    if(b.dataset.kind==='exp'){ if(confirm('Diese Ausgabe löschen?')) deleteExpense(b.dataset.histdel); }
+    else { if(confirm('Diese Einnahme löschen?')) deleteDepositPortion(b.dataset.histdel, b.dataset.pot); }
+  });
+  document.getElementById('pots').addEventListener('click',e=>{ const c=e.target.closest('[data-pot]'); if(c) openDetail(c.dataset.pot); });
+  document.getElementById('pots').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ const c=e.target.closest('[data-pot]'); if(c){ e.preventDefault(); openDetail(c.dataset.pot); } } });
+  document.getElementById('addNote').addEventListener('click',addNote);
+  document.getElementById('checklist').addEventListener('change',e=>{ const cb=e.target.closest('input[data-check]'); if(cb) toggleCheck(cb.dataset.check, cb.checked); });
+  document.getElementById('notes').addEventListener('click',e=>{
+    const ed=e.target.closest('.note-editbtn'); if(ed){ startEditNote(ed.dataset.id); return; }
+    const dl=e.target.closest('.note-delbtn'); if(dl){ deleteNote(dl.dataset.id); return; }
+    const sv=e.target.closest('.note-save'); if(sv){ saveNote(sv.dataset.id); return; }
+    const cn=e.target.closest('.note-cancel'); if(cn){ cancelNote(); return; }
+  });
+  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('show'))));
+  document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); }));
+  document.getElementById('exportBtn').addEventListener('click',exportBackup);
+  document.getElementById('mergeBtn').addEventListener('click',()=>{ importMode='merge'; document.getElementById('importFile').click(); });
+  document.getElementById('replaceBtn').addEventListener('click',()=>{ importMode='replace'; document.getElementById('importFile').click(); });
+  document.getElementById('importFile').addEventListener('change',e=>{ if(e.target.files[0]) handleImport(e.target.files[0]); e.target.value=''; });
+  document.getElementById('resetScope').addEventListener('change',e=>{
+    document.getElementById('resetRange').style.display = e.target.value==='range'?'block':'none';
+    resetArmed=false; const rc=document.getElementById('resetConfirm'); rc.textContent='Zurücksetzen'; rc.classList.remove('armed');
+  });
+  document.getElementById('resetConfirm').addEventListener('click',doReset);
+  document.getElementById('resetBtn').addEventListener('click',openReset);
+  document.getElementById('editSave').addEventListener('click',saveEdit);
+  document.getElementById('editModeToggle').addEventListener('click',e=>{ const b=e.target.closest('button[data-mode]'); if(b) setEditMode(b.dataset.mode); });
+  document.getElementById('editCancel').addEventListener('click',closeEdit);
+  document.getElementById('editClose').addEventListener('click',closeEdit);
+  document.getElementById('editReason').addEventListener('keydown',e=>{ if(e.key==='Enter') saveEdit(); });
+}
+
+(async function init(){
+  loadState();
+  await initSync();
+  bind();
+  render();
+  renderSync();
+  if(!storageOK) document.getElementById('storageWarn').style.display='block';
+  document.getElementById('loader').style.display='none';
+})();
+</script>
+</body>
+</html>
